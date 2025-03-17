@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ubuntu-focal-svc
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - name: sshport
+    nodePort: 31028
+    port: 22
+    protocol: TCP
+    targetPort: 22
+  selector:
+    kubevirt.io/domain: ubuntu-focal
+  type: NodePort    

@@ -1,0 +1,50 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ubuntu-focal
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/size: small
+        kubevirt.io/domain: ubuntu-focal
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        devices:
+          disks:
+            - name: containervolume
+              disk:
+                bus: virtio
+            - name: cloudinitvolume
+              disk:
+                bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+        resources:
+          requests:
+            memory: 2048M # almost 2 GB
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+        - name: containervolume
+          containerDisk:
+            image: tedezed/ubuntu-container-disk:20.0
+        - name: cloudinitvolume
+          cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              password: ubuntu
+              chpasswd: { expire: False }
+              ssh_authorized_keys:
+              - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDXbqUB/TvxlMX5d5UYriHx00QRQ7P+dFj84mtN+4z53sMTiXtMveTlwbXj+B+PpBk3KQJnkHMBmrFhnmG4W5evPrSLB0ti9CmDDtKcMxkGI3j09nXCSrEIqs8BTo16Tgxq1RQGAWTgyT1C7KcHWHjNEDWrNbbCcWv7SbtF75DDTI2Up2mZglH5CcDsS2C9fJVIb23DJSOwv36RmwGpl26IGon4QTjV7vH+8cstPpx4HfWe92wOTDikS2o5CUNoALsmUFKiEZTU8iia6e+UEBGDUxl2nZ2R+CCXjc5QXRcofIhBCiIFz+70zlmU31bZrXmkX6ROwOznyOzSHiRWoGrJ/oCz8ghdHWBzhmBCzL7RpyDMoVGc1riF6ekrPUa3spNG3YhNLly/j6rv2VLWL6BsvFFTuxZbgFZs3vsCc6LVC1/e8H80FxBjHc5HfxwdpM
+              package_update: true
+              package_upgrade: true
+              packages: 
+              - qemu-guest-agent
+              runcmd:
+              - [ systemctl, start, qemu-guest-agent ]
